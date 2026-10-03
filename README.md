@@ -1,81 +1,52 @@
-# LinkedIn-KI-Assistent
+<h1 align="center">LinkedIn-KI-Assistent</h1>
 
-Ein agentisches System, das meine LinkedIn-Präsenz zu KI-Themen vorbereitet:
-Es recherchiert die Nachrichtenlage, schreibt Beitragsentwürfe mit Quellen und
-Bildern, schlägt täglich Kommentare zu Beiträgen aus meinem Fachgebiet vor und
-veröffentlicht erst, **nachdem ich freigegeben habe**.
+<p align="center">
+  <b>Ein KI-Agent, der recherchiert, Beiträge entwirft und Kommentare vorschlägt.<br>
+  Veröffentlicht wird erst nach meiner Freigabe.</b>
+</p>
 
-Gebaut mit Claude Code als Agent, Python und macOS-launchd. Im Einsatz seit
-September 2026.
+<p align="center">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Agent-Claude_Code-f5a623?style=flat-square&labelColor=14213d">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3-f5a623?style=flat-square&labelColor=14213d">
+  <img alt="macOS launchd" src="https://img.shields.io/badge/Zeitplan-macOS_launchd-f5a623?style=flat-square&labelColor=14213d">
+  <img alt="Status" src="https://img.shields.io/badge/Status-im_Einsatz_seit_09%2F2026-f5a623?style=flat-square&labelColor=14213d">
+</p>
 
-> **Hinweis:** Dieses Repository ist eine Projektbeschreibung. Der Quellcode
-> liegt in einem privaten Repository. Einblick gebe ich gern im Gespräch.
+<p align="center">
+  <img src="assets/architektur.png" alt="Ablauf: Zeitplan, Recherche, Entwurf, Freigabe, LinkedIn" width="100%">
+</p>
+
+> Dieses Repository beschreibt das Projekt. Der Quellcode liegt privat,
+> Einblick gebe ich gern im Gespräch.
 
 ---
 
-## Was das System macht
+## Der Ablauf
 
-**Wochenlauf (montags):** Recherchiert die KI-Nachrichten der Vorwoche, wählt
-fünf Themen, schreibt die Beiträge, erzeugt passende Bilder und legt alles als
-Vorschau ab. Jede Zahl im Text hat eine Quelle mit Datum und Link.
-
-**Kommentar-Routine (werktags, 9:00):** Durchsucht die neuesten Beiträge einer
-Beobachtungsliste, bewertet sie und schlägt für die besten fünf je zwei
-Kommentar-Varianten vor. Nach meiner Freigabe (z. B. `1a 2b 3a`) werden die
-Kommentare zufällig über den Tag verteilt und automatisch gesetzt.
-
-**Auswertung:** Liest Reaktionen und Kommentare der eigenen Beiträge aus und
-gleicht sie mit Studien zu Wochentagen und Uhrzeiten ab. Daraus entsteht der
-Plan, welcher Beitrag an welchem Tag erscheint.
-
-## Architektur
-
-```mermaid
-flowchart LR
-    subgraph Zeitplan[macOS launchd]
-        W[Wochenlauf<br/>Mo 10:00]
-        K[Kommentarlauf<br/>Mo–Fr 9:00]
-        A[Ausführung<br/>alle 5 Min.]
-    end
-
-    subgraph Agent[Claude Code als Agent]
-        S[Skills: Schreiben,<br/>Humanizer, Kommentare]
-        R[Regeln: keine erfundenen<br/>Zahlen oder Erfahrungen]
-    end
-
-    P[(Perplexity<br/>Recherche mit Quellen)]
-    O[(OpenAI<br/>Bilderzeugung)]
-    X[(Apify<br/>LinkedIn lesen)]
-    U[(Publora<br/>LinkedIn schreiben)]
-    F{{Meine Freigabe}}
-
-    W --> Agent
-    K --> X --> Agent
-    Agent --> P
-    Agent --> O
-    Agent -->|Vorschau| F
-    F -->|Plan mit Uhrzeiten| A --> U
-```
-
-Lesen und Schreiben sind bewusst getrennt: Apify liest LinkedIn, Publora
-schreibt. Der Agent selbst hat keinen Schreibzugriff auf LinkedIn. Er erzeugt
-nur Entwürfe und einen Plan, und ausgeführt wird erst nach der Freigabe.
+| | Schritt | Was passiert | Technik |
+|:-:|---|---|---|
+| ⏰ | **Zeitplan** | Startet die Läufe automatisch: montags den Wochenlauf, werktags um 9:00 die Kommentar-Routine. Vorher prüft ein Check, ob alle Dienste erreichbar sind. | macOS launchd, Bash |
+| 🔍 | **Recherche** | Sammelt die KI-Nachrichten der Woche und die neuesten Beiträge einer Beobachtungsliste. Jede Zahl bekommt Quelle, Datum und Link. | Perplexity API, Apify |
+| 📝 | **Entwurf** | Der Agent wählt Themen, schreibt Beiträge und je zwei Kommentar-Varianten, erzeugt passende Bilder und prüft die Texte auf typische KI-Floskeln. | Claude Code, OpenAI Images API |
+| ✅ | **Freigabe** | Ich lese die Vorschau und gebe frei, z. B. `1a 2b 3a`. Ohne diesen Schritt wird nichts veröffentlicht. | Plan als JSON |
+| 🏁 | **LinkedIn** | Freigegebenes wird zu zufälligen Zeiten mit Mindestabstand gesetzt. Eine Auswertung auf Abruf zeigt, welche Themen an welchen Tagen tragen. | Publora API |
 
 ## Designentscheidungen
 
 | Entscheidung | Warum |
 |---|---|
-| **Nichts ohne Freigabe** | Öffentliche Aussagen unter meinem Namen. Voll automatisches Posten wurde bewusst nicht gebaut. |
-| **Belegpflicht** | Jede Zahl braucht Quelle, Datum und Link. Persönliche Erfahrungen dürfen nur vorkommen, wenn sie in einer gepflegten Sammlung echter Erlebnisse belegt sind. |
-| **Zufällige Uhrzeiten, Mindestabstand** | Kommentare werden in Zeitfenstern zufällig verteilt (mind. 20 Minuten Abstand). So entsteht kein maschinelles Muster. |
-| **Dienste-Check vor jedem Lauf** | Ist ein Dienst nicht erreichbar oder ein Schlüssel ungültig, bricht der Lauf ab, bevor der teure Agent startet. |
-| **Sensible Themen ausgeschlossen** | Beiträge zu Tod, Krankheit oder Entlassungen werden nie kommentiert oder geliked. |
-| **Schutz gegen Prompt Injection** | Fremde Beiträge gelten als Daten, nie als Anweisung an den Agenten. Auffälligkeiten werden im Bericht gemeldet. |
-| **Rückmeldung bei jedem Lauf** | macOS-Mitteilung und Statusdatei, egal ob der Lauf klappt oder scheitert. |
+| **Nichts ohne Freigabe** | Es sind öffentliche Aussagen unter meinem Namen. Voll automatisches Posten habe ich bewusst nicht gebaut. |
+| **Belegpflicht** | Keine erfundenen Zahlen. Persönliche Erfahrungen nur, wenn sie in einer gepflegten Sammlung echter Erlebnisse belegt sind. |
+| **Lesen und Schreiben getrennt** | Der Agent liest LinkedIn, kann aber selbst nichts veröffentlichen. Er erzeugt Entwürfe und einen Plan, ausgeführt wird nur der freigegebene Plan. |
+| **Natürliches Muster** | Kommentare werden zufällig in Zeitfenstern verteilt, mit mindestens 20 Minuten Abstand. |
+| **Schutz gegen Prompt Injection** | Fremde Beiträge gelten als Daten, nie als Anweisung. Auffälligkeiten meldet der Agent im Bericht. |
+| **Sensible Themen tabu** | Beiträge zu Tod, Krankheit oder Entlassungen werden nie kommentiert oder geliked. |
+| **Früh abbrechen** | Ist ein Dienst nicht erreichbar, endet der Lauf, bevor der Agent startet und Kosten entstehen. Jeder Lauf meldet sich per Mitteilung. |
 
-## Einblicke in den Code
+## Einblick in den Code
 
-**Kandidaten bewerten:** Welche fremden Beiträge lohnen einen Kommentar?
+<details>
+<summary><b>Welche fremden Beiträge lohnen einen Kommentar?</b></summary>
 
 ```python
 def bewerten(post: dict, jetzt: float) -> float | None:
@@ -92,58 +63,51 @@ def bewerten(post: dict, jetzt: float) -> float | None:
     punkte += 15 if frage else 0                      # Schlussfrage zum Antworten
     return round(punkte, 1)
 ```
+</details>
 
-**Freigabe statt Autopilot:** Der Ausführungsschritt setzt nur, was im
-freigegebenen Plan steht und fällig ist.
+<details>
+<summary><b>Ausgeführt wird nur, was freigegeben und fällig ist</b></summary>
 
 ```python
 faellig = [e for e in plan
            if e["status"] == "geplant" and datetime.fromisoformat(e["zeit"]) <= jetzt]
 ```
+</details>
 
-## Beispiele
+## Beispiele aus dem Betrieb
 
-| Eigenes Schaubild zu einem Beitrag | Wiederkehrende Reihe „Prompt der Woche“ |
-|---|---|
-| ![Schaubild](assets/beispiel-schaubild.png) | ![Prompt der Woche](assets/beispiel-reihe-prompt-der-woche.png) |
+| Schaubild zu einem Beitrag | Reihe „Prompt der Woche“ |
+|:-:|:-:|
+| <img src="assets/beispiel-schaubild.png" alt="Schaubild Prompt Injection per Telefon"> | <img src="assets/beispiel-reihe-prompt-der-woche.png" alt="Prompt der Woche: Chain of Thought"> |
 
-## Was ich daraus gelernt habe
+## Was ich gelernt habe
 
-- **Persönliche Erfahrungsberichte schlagen Nachrichten deutlich.** In den
-  ersten Wochen erzielte ein Erfahrungsbericht ein Vielfaches der Interaktionen
-  aller News-Beiträge zusammen. Seitdem ist pro Woche mindestens eine echte
-  Geschichte eingeplant.
-- **Der Wochentag ist Feinjustierung, der Inhalt entscheidet.** Studien zeigen
-  für persönliche Profile unter 10 % Unterschied zwischen bestem und
-  schlechtestem Tag. Starke Beiträge kommen auf Dienstag/Mittwoch, schwächere
-  füllen Lücken.
-- **Ein Agent braucht Leitplanken, keine Freiheit.** Die wichtigsten Teile des
-  Systems sind die Regeln, was der Agent nicht darf: erfinden, ohne Freigabe
-  posten, fremden Text als Anweisung lesen.
+**Persönliche Geschichten schlagen Nachrichten.** In den ersten Wochen erzielte ein
+Erfahrungsbericht ein Vielfaches der Interaktionen aller News-Beiträge zusammen.
+Seitdem ist jede Woche mindestens eine echte Geschichte eingeplant.
 
-## Technik
+**Der Wochentag ist Feinjustierung, der Inhalt entscheidet.** Studien zeigen für
+persönliche Profile unter 10 % Unterschied zwischen bestem und schlechtestem Tag.
+Starke Beiträge kommen auf Dienstag und Mittwoch, schwächere füllen Lücken.
 
-Python 3 · Claude Code (Agent, Skills, nicht-interaktiver Modus) · macOS launchd ·
-Perplexity API (Recherche mit Quellen) · OpenAI Images API · Apify (LinkedIn
-lesen) · Publora (LinkedIn schreiben) · imgbb (Bild-Hosting)
+**Ein Agent braucht Leitplanken.** Die wichtigsten Teile des Systems legen fest,
+was der Agent nicht darf: erfinden, ohne Freigabe posten, fremden Text als
+Anweisung lesen.
 
-## Herkunft
+## Herkunft und mein Anteil
 
 Grundlage ist das Open-Source-Paket
-[linkedin-skills](https://github.com/sergebulaev/linkedin-skills) von Sergey
-Bulaev (MIT-Lizenz): Schreib- und Kommentar-Skills sowie die Anbindungen an
-Apify und Publora.
+[linkedin-skills](https://github.com/sergebulaev/linkedin-skills) von Sergey Bulaev
+(MIT-Lizenz) mit Schreib- und Kommentar-Skills und den Anbindungen an Apify und Publora.
 
-**Von mir stammen:**
-- die gesamte Automatisierung: Wochenlauf, Kommentar-Routine,
-  Freigabe-Schritt, zeitgesteuerte Ausführung
-- die Recherche-Anbindung (Perplexity) mit Pflicht zu Quellen
-- die Bild-Pipeline mit Hosting und Prüfung
+**Von mir:**
+- die Automatisierung: Wochenlauf, Kommentar-Routine, Freigabe, zeitgesteuerte Ausführung
+- die Recherche mit Quellenpflicht und die Bild-Pipeline
 - die inhaltlichen Regeln, die Themenausrichtung und die Auswertung
 
-Umgesetzt habe ich das mit Claude Code: Ich habe die Anforderungen und Regeln
-festgelegt, die Umsetzung gesteuert, geprüft und im Betrieb nachgeschärft.
+Umgesetzt mit Claude Code: Ich habe Anforderungen und Regeln festgelegt, die
+Umsetzung gesteuert, geprüft und im Betrieb nachgeschärft.
 
 ---
 
-© 2026 Fabian Schenk. Alle Rechte vorbehalten.
+<p align="center"><sub>© 2026 Fabian Schenk · Alle Rechte vorbehalten</sub></p>
