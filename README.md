@@ -13,7 +13,8 @@
 </p>
 
 <p align="center">
-  <img src="assets/architektur.png" alt="Ablauf: Zeitplan, Recherche, Entwurf, Freigabe, LinkedIn" width="100%">
+  <img src="assets/ablauf.png" alt="Ablaufdiagramm: Zeitplan, Wochenlauf und Kommentar-Routine, Freigabe, Plan mit Uhrzeiten, Veröffentlichen, Auswertung" width="100%">
+  <br><sub><a href="assets/ablauf-diagramm.png">Diagramm in hoher Auflösung</a></sub>
 </p>
 
 > Dieses Repository beschreibt das Projekt. Der Quellcode liegt privat,
@@ -23,13 +24,15 @@
 
 ## Der Ablauf
 
-| | Schritt | Was passiert | Technik |
+| Nr. | Schritt | Was passiert | Technik |
 |:-:|---|---|---|
-| ⏰ | **Zeitplan** | Startet die Läufe automatisch: montags den Wochenlauf, werktags um 9:00 die Kommentar-Routine. Vorher prüft ein Check, ob alle Dienste erreichbar sind. | macOS launchd, Bash |
-| 🔍 | **Recherche** | Sammelt die KI-Nachrichten der Woche und die neuesten Beiträge einer Beobachtungsliste. Jede Zahl bekommt Quelle, Datum und Link. | Perplexity API, Apify |
-| 📝 | **Entwurf** | Der Agent wählt Themen, schreibt Beiträge und je zwei Kommentar-Varianten, erzeugt passende Bilder und prüft die Texte auf typische KI-Floskeln. | Claude Code, OpenAI Images API |
-| ✅ | **Freigabe** | Ich lese die Vorschau und gebe frei, z. B. `1a 2b 3a`. Ohne diesen Schritt wird nichts veröffentlicht. | Plan als JSON |
-| 🏁 | **LinkedIn** | Freigegebenes wird zu zufälligen Zeiten mit Mindestabstand gesetzt. Eine Auswertung auf Abruf zeigt, welche Themen an welchen Tagen tragen. | Publora API |
+| 1 | **Zeitplan** | Startet die Läufe automatisch und prüft vorher, ob alle Dienste erreichbar sind. | macOS launchd, Bash |
+| A | **Wochenlauf** (montags) | Recherchiert die KI-Nachrichten der Woche, schreibt fünf Beiträge und erzeugt die Bilder. Jede Zahl bekommt Quelle, Datum und Link. | Perplexity, Claude Code, OpenAI |
+| B | **Kommentar-Routine** (werktags 9:00) | Liest die neuesten Beiträge einer Beobachtungsliste, bewertet sie und entwirft je zwei Kommentar-Varianten. | Apify, Python, Claude Code |
+| 2 | **Meine Freigabe** | Ich lese die Vorschau und wähle aus, z. B. `1a 2b 3a`. Ohne diesen Schritt wird nichts veröffentlicht. | Mensch entscheidet |
+| 3 | **Plan mit Uhrzeiten** | Freigegebenes wird zufällig auf Zeitfenster verteilt, mit mindestens 20 Minuten Abstand. | JSON-Plan |
+| 4 | **Veröffentlichen** | Alle 5 Minuten wird geprüft, was fällig ist, und als Beitrag, Kommentar oder Reaktion gesetzt. | Publora API |
+| 5 | **Auswertung** | Zeigt auf Abruf, welche Themen an welchen Tagen tragen. Das fließt in die nächste Planung. | Apify |
 
 ## Designentscheidungen
 
